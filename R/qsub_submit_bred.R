@@ -4,7 +4,8 @@
 qsub_submit_bred <- dynutils::inherit_default_params(
   list(calculate_target_importance),
   function(
-    expr,
+    expr_targets,
+    expr_regulators = expr_targets,
     samples,
     regulators,
     targets,
@@ -23,17 +24,19 @@ qsub_submit_bred <- dynutils::inherit_default_params(
       X = seq_along(targets),
       qsub_config = qsub::override_qsub_config(
         qsub_config = qsub_config,
+        memory = "3G",
         name = "bred",
         wait = FALSE,
         stop_on_error = FALSE,
         remove_tmp_folder = FALSE,
-        batch_tasks = round(length(targets) / 1000) # split work into ~ 1000 tasks
+        batch_tasks = ceiling(length(targets) / 1000) # split work into ~ 1000 tasks
       ),
       qsub_packages = c("randomForest", "dynutils", "dplyr", "magrittr"),
       qsub_environment = c("x"),
       FUN = calculate_target_importance,
       # pass data and other parameters
-      expr = expr,
+      expr_targets = expr_targets,
+      expr_regulators = expr_targets,
       samples = samples,
       regulators = regulators,
       targets = targets,
