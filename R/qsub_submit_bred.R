@@ -10,10 +10,11 @@ qsub_submit_bred <- dynutils::inherit_default_params(
     regulators,
     targets,
     num_trees,
-    num_variables_per_split,
-    num_samples_per_tree,
+    # num_variables_per_split,
+    # num_samples_per_tree,
     min_node_size,
-    interaction_importance_filter,
+    min_importance,
+    min_sc_importance,
     sigmoid_mean,
     sigmoid_sd,
     qsub_config = qsub::get_default_qsub_config()
@@ -24,14 +25,14 @@ qsub_submit_bred <- dynutils::inherit_default_params(
       X = seq_along(targets),
       qsub_config = qsub::override_qsub_config(
         qsub_config = qsub_config,
-        memory = "3G",
+        max_wall_time = "12:00:00",
+        memory = "10G",
         name = "bred",
         wait = FALSE,
         stop_on_error = FALSE,
-        remove_tmp_folder = FALSE,
-        batch_tasks = ceiling(length(targets) / 1000) # split work into ~ 1000 tasks
+        remove_tmp_folder = FALSE
       ),
-      qsub_packages = c("randomForest", "dynutils", "dplyr", "magrittr"),
+      qsub_packages = c("bred", "rangercase"),
       qsub_environment = c("x"),
       FUN = calculate_target_importance,
       # pass data and other parameters
@@ -41,10 +42,11 @@ qsub_submit_bred <- dynutils::inherit_default_params(
       regulators = regulators,
       targets = targets,
       num_trees = num_trees,
-      num_variables_per_split = num_variables_per_split,
-      num_samples_per_tree = num_samples_per_tree,
+      # num_variables_per_split = num_variables_per_split,
+      # num_samples_per_tree = num_samples_per_tree,
       min_node_size = min_node_size,
-      interaction_importance_filter = interaction_importance_filter,
+      min_importance = min_importance,
+      min_sc_importance = min_sc_importance,
       sigmoid_mean = sigmoid_mean,
       sigmoid_sd = sigmoid_sd
     )

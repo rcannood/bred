@@ -1,57 +1,97 @@
-#' @importFrom randomForest randomForest
+#' @importFrom rangercase ranger
 #' @importFrom reshape2 melt
 #' @importFrom sigmoid sigmoid
+#' @importFrom stats sd pnorm
+#' @importFrom Matrix t
+#' @importFrom reshape2 melt
 #'
 #' @export
 calculate_target_importance <- function(
   target_ix,
   expr_targets,
-  expr_regulators = expr_targets,
+  expr_regulators,
   samples,
   regulators,
   targets,
   num_trees = 10000,
-  num_variables_per_split = 100,
-  num_samples_per_tree = 250,
   min_node_size = 10,
-  interaction_importance_filter = .01,
+  min_importance = .01,
+  min_sc_importance = .01,
   sigmoid_mean = mean(expr_regulators[expr_regulators != 0]),
   sigmoid_sd = sd(expr_regulators[expr_regulators != 0])
 ) {
+
   target <- targets[[target_ix]]
-
   regs <- setdiff(regulators, target)
+  target_expr <- scale(expr_targets[,target])[,1]
 
-  rf <- randomForest::randomForest(
-    expr_regulators[,regs],
-    scale(expr_targets[,target])[,1],
-    mtry = num_variables_per_split,
-    ntree = num_trees,
-    sampsize = num_samples_per_tree,
-    nodesize = min_node_size,
-    importance = TRUE,
-    localImp = TRUE
+  data <- data.frame(
+    PREDICT = target_expr,
+    as.matrix(expr_regulators[,regs]),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
   )
 
-  reg_tar_map <- match(regulators, targets)
+  rf <- rangercase::ranger(
+    data = data,
+    dependent.variable.name = "PREDICT",
+    verbose = TRUE,
+    num.threads = 1,
+    importance = "permutation",
+    num.trees = num_trees,
+    min.node.size = min_node_size,
+    # parameters that could be added back
+    # mtry = num_variables_per_split,
+    # sample.fraction = .5,
+    # max.depth = max_depth,
+    local.importance = TRUE
+  )
 
-  rf$localImportance %>%
-    reshape2::melt(varnames = c("regulator", "sample"), value.name = "importance") %>%
-    as_data_frame() %>%
-    mutate(
-      # turn columns into factors
-      sample = factor(as.character(sample), levels = samples),
-      regulator = factor(as.character(regulator), levels = regulators),
-      target = factor(targets[[target_ix]], levels = targets),
-      # fetch regulator expression
-      expr_reg = expr_regulators[cbind(sample, reg_tar_map[regulator])],
-      expr_reg_sc = sigmoid::sigmoid((expr_reg - sigmoid_mean) * sigmoid_sd),
-      # downscale importance if regulator is not expressed
-      # ... it can't be regulating anything if it is not expressed ...
-      adj_importance = expr_reg_sc * importance
+  cat("Selecting most important regulators\n")
+
+  imp <- tibble(
+    feature_id = names(rf$variable.importance),
+    importance = rf$variable.importance,
+    effect = ifelse(importance == 0, 0, rf$variable.importance.cor),
+    ix = seq_along(feature_id)
+  ) %>%
+    arrange(desc(importance)) %>%
+    filter(importance > min_importance)
+
+  limp <- Matrix::t(rf$variable.importance.casewise[imp$feature_id, , drop = FALSE])
+
+  # downscale importance if regulator is not expressed
+  # ... it can't be regulating anything if it is not expressed ...
+  expr_reg_sc <- stats::pnorm(
+    as.matrix(expr_regulators[rownames(limp),colnames(limp)]),
+    mean = sigmoid_mean,
+    sd = sigmoid_sd
+  )
+  limp_sc <- limp * expr_reg_sc
+
+  limp_df <-
+    left_join(
+      reshape2::melt(limp, varnames = c("cell_id", "regulator"), value.name = "importance"),
+      reshape2::melt(limp_sc, varnames = c("cell_id", "regulator"), value.name = "importance_sc"),
+      by = c("cell_id", "regulator")
     ) %>%
-    group_by(regulator) %>%
-    filter(mean(adj_importance) > interaction_importance_filter) %>% # reduce size of grn...
-    ungroup() %>%
-    select(sample, regulator, target, importance, adj_importance)
+    as_tibble() %>%
+    arrange(desc(importance)) %>%
+    filter(importance > min_sc_importance)
+
+  lst(
+    importance = imp %>% transmute(
+      regulator = factor(feature_id, levels = regulators),
+      target = factor(target, levels = targets),
+      importance,
+      effect
+    ),
+    importance_sc = limp_df %>% transmute(
+      cell_id = factor(as.character(cell_id), levels = samples),
+      regulator = factor(as.character(regulator), levels = regulators),
+      target = factor(target, levels = targets),
+      importance,
+      importance_sc
+    )
+  )
 }
