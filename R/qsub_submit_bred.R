@@ -32,7 +32,7 @@ qsub_submit_bred <- dynutils::inherit_default_params(
         stop_on_error = FALSE,
         remove_tmp_folder = FALSE
       ),
-      qsub_packages = c("bred", "rangercase"),
+      qsub_packages = c("bred", "rangercase", "dplyr", "magrittr", "tidyr"),
       qsub_environment = c("x"),
       FUN = calculate_target_importance,
       # pass data and other parameters

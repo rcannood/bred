@@ -2,7 +2,8 @@
 
 #' @importFrom grDevices colorRampPalette
 #' @importFrom RColorBrewer brewer.pal
-label_clusters <- function(sample_groupings, cluster) {
+#' @export
+label_clusters <- function(sample_groupings, cluster, arrange_fun = function(df) arrange(df, desc(F1))) {
   if (!"group_type" %in% colnames(sample_groupings)) {
     sample_groupings$group_type <- factor("group")
   }
@@ -40,7 +41,7 @@ label_clusters <- function(sample_groupings, cluster) {
 
   labels <-
     test %>%
-    arrange(desc(PPV * TPR)) %>%
+    arrange_fun() %>%
     group_by(cluster) %>%
     slice(1) %>%
     ungroup() %>%

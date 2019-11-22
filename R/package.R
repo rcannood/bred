@@ -1,4 +1,4 @@
-#' Helper package for the bredimmgen analysis
+#' bred
 #'
 #' @import dplyr
 #' @import tidyr
@@ -8,6 +8,6 @@
 #' @importFrom magrittr %<>% %$% set_rownames set_colnames
 #'
 #' @docType package
-#' @name bredimmgen
+#' @name bred
 NULL
 

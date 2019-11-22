@@ -30,3 +30,4 @@ Suggests:
   rmarkdown
 Remotes:
   rcannood/ranger@vimp_cor
+RoxygenNote: 6.1.1
