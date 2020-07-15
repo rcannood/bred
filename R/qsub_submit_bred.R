@@ -37,7 +37,7 @@ qsub_submit_bred <- dynutils::inherit_default_params(
       FUN = calculate_target_importance,
       # pass data and other parameters
       expr_targets = expr_targets,
-      expr_regulators = expr_targets,
+      expr_regulators = expr_regulators,
       samples = samples,
       regulators = regulators,
       targets = targets,
