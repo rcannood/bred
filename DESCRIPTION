@@ -1,33 +1,50 @@
 Package: bred
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Inferring Case-wise Regulatory Networks
+Version: 0.0.1
 Authors@R: c(
-  person("Robrecht", "Cannoodt", email = "rcannood@gmail.com", role = c("aut", "cre")))
-Description: What the package does (one paragraph).
-License: What license it uses
+    person(
+      "Robrecht", "Cannoodt", 
+      email = "rcannood@gmail.com", 
+      role = c("aut", "cre", "cph"),
+      comment = c(ORCID = "0000-0003-3641-729X", github = "rcannood")
+    )
+  )
+Description: 
+  Network inference methods are computational tools which use
+  large omics datasets to predict which genes are regulated by which 
+  transcription factors. Since regulatory interactions are context-dependent,
+  attempting to model regulatory dynamics in the form of a single regulatory
+  network may have little relevance. This package allows to predict
+  regulatory networks for individual samples, which can then be clustered
+  together.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
-  R (>= 3.0.0)
+  R (>= 3.5.0)
 Imports:
   assertthat,
   dplyr,
   dynutils,
+  grDevices,
   igraph,
   lmds,
   magrittr,
   Matrix,
   purrr,
-  qsub,
   rangercase,
   RANN,
+  RColorBrewer,
   reshape2,
+  sigmoid,
   stats,
+  stringr,
   tibble,
   tidyr
 Suggests:
   knitr,
+  qsub,
   rmarkdown
 Remotes:
   rcannood/ranger@vimp_cor
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
