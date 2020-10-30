@@ -1,5 +1,3 @@
-#' @importFrom qsub get_default_qsub_config qsub_lapply override_qsub_config
-#'
 #' @export
 qsub_submit_bred <- dynutils::inherit_default_params(
   list(calculate_target_importance),
@@ -10,15 +8,19 @@ qsub_submit_bred <- dynutils::inherit_default_params(
     regulators,
     targets,
     num_trees,
-    # num_variables_per_split,
-    # num_samples_per_tree,
     min_node_size,
     min_importance,
-    min_sc_importance,
+    min_cw_importance,
     sigmoid_mean,
     sigmoid_sd,
-    qsub_config = qsub::get_default_qsub_config()
+    qsub_config = NULL
   ) {
+    requireNamespace("qsub")
+
+    if (is.null(qsub_config)) {
+      qsub_config <- qsub::get_default_qsub_config()
+    }
+
     x <- 1 # dummy data to pass
 
     qsub::qsub_lapply(
@@ -42,11 +44,9 @@ qsub_submit_bred <- dynutils::inherit_default_params(
       regulators = regulators,
       targets = targets,
       num_trees = num_trees,
-      # num_variables_per_split = num_variables_per_split,
-      # num_samples_per_tree = num_samples_per_tree,
       min_node_size = min_node_size,
       min_importance = min_importance,
-      min_sc_importance = min_sc_importance,
+      min_cw_importance = min_cw_importance,
       sigmoid_mean = sigmoid_mean,
       sigmoid_sd = sigmoid_sd
     )

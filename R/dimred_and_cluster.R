@@ -1,22 +1,29 @@
+#' Perform LMDS dimred and Leiden clustering on the bred output
+#'
+#' @param cw_importance Case-wise importances
+#' @param lmds_ndim Number of LMDS dimensions
+#' @param knn K-nearest-neighbours
+#' @param use_scaled_imp Whether or not to used the raw importance values or the scaled importance values to compute the KNN.
+#'
 #' @importFrom Matrix sparseMatrix
 #' @importFrom lmds lmds
 #' @importFrom RANN nn2
 #' @importFrom igraph graph_from_data_frame cluster_louvain layout_with_fr
 #' @export
-dimred_and_cluster <- function(importance_sc, lmds_ndim = 20, knn = 100, use_scaled_imp = TRUE) {
-  sample_ids <- levels(importance_sc$sample_id)
-  interaction_ids <- levels(importance_sc$interaction_id)
+dimred_and_cluster <- function(cw_importance, lmds_ndim = 20, knn = 100, use_scaled_imp = TRUE) {
+  sample_ids <- levels(cw_importance$sample_id)
+  interaction_ids <- levels(cw_importance$interaction_id)
 
-  imp_sc_mat <- Matrix::sparseMatrix(
-    i = importance_sc$sample_id %>% as.integer,
-    j = importance_sc$interaction_id %>% as.integer,
-    x = importance_sc[[if (use_scaled_imp) "importance_sc" else "importance"]],
+  cw_imp_mat <- Matrix::sparseMatrix(
+    i = cw_importance$sample_id %>% as.integer,
+    j = cw_importance$interaction_id %>% as.integer,
+    x = cw_importance[[if (use_scaled_imp) "importance_sc" else "importance"]],
     dims = c(length(sample_ids), length(interaction_ids)),
     dimnames = list(sample_ids, interaction_ids)
   )
 
-  dimred_lmds <- lmds::lmds(imp_sc_mat, ndim = lmds_ndim, distance_method = "spearman")
-  rm(imp_sc_mat)
+  dimred_lmds <- lmds::lmds(cw_imp_mat, ndim = lmds_ndim, distance_method = "spearman")
+  rm(cw_imp_mat)
   gc()
 
   # compute knn
@@ -43,6 +50,7 @@ dimred_and_cluster <- function(importance_sc, lmds_ndim = 20, knn = 100, use_sca
     vertices = seq_len(nrow(dimred_lmds)),
     directed = FALSE
   )
+  # cl <- leiden::leiden(gr)
   cl <- igraph::cluster_louvain(gr)
   cluster <- cl$membership
   names(cluster) <- rownames(dimred_lmds)

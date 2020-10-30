@@ -3,8 +3,13 @@
 \docType{package}
 \name{bred}
 \alias{bred}
-\alias{bred-package}
-\title{bred}
+\title{bred: Inferring Case-wise Regulatory Networks}
 \description{
-bred
+Network inference methods are computational tools which use
+large omics datasets to predict which genes are regulated by which
+transcription factors. Since regulatory interactions are context-dependent,
+attempting to model regulatory dynamics in the form of a single regulatory
+network may have little relevance. This package allows to predict
+regulatory networks for individual samples, which can then be clustered
+together.
 }
